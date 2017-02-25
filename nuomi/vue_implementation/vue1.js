@@ -1,8 +1,13 @@
-function convert(obj){
-    Object.keys(obj).forEach((key)=>{
+class Observer{
+    constructor(data){
+        this.data = data 
+        this._convert(data)
+    }
+    _convert(obj){
+        Object.keys(obj).forEach((key)=>{
         let val = obj[key]
         if(typeof val === 'object'){
-            convert(val)
+            this._convert(val)
         }
         Object.defineProperty(obj,key,{
             enumerable: true,
@@ -13,15 +18,11 @@ function convert(obj){
             },
             set: function(newVal){
                 console.log(`你设置了 ${key},新的值是${newVal}`)
+                if(val === newVal) return 
                 val = newVal
             }
         })
     })
-}
-class Observer{
-    constructor(data){
-        this.data = data 
-        convert(data)
     }
 }
 let app1 = new Observer({
