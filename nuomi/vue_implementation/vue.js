@@ -15,8 +15,9 @@ class Event{
 class Observer{
     constructor(data){
         this.data = data 
-        this._convert(data)
         this.event = new Event()
+        this._convert(data)
+        
     }
     $watch(key,cb){
         this.event.on(key,cb);
@@ -32,12 +33,13 @@ class Observer{
             enumerable: true,
             configurable: true,
             get : function(){
-                console.log(`你访问了 ${key}`)
                 return val 
             },
             set: function(newVal){
-                console.log(`你设置了 ${key},新的值是${newVal}`)
                 if(val === newVal) return 
+                if(typeof newVal === 'object'){
+                    self._convert(newVal)
+                }
                 self.event.emit(key,newVal)
                 val = newVal
             }
@@ -45,11 +47,5 @@ class Observer{
     })
     }
 }
-let app1 = new Observer({
-  name: 'youngwind',
-  age: 25
-});
-app1.$watch('age',function(age){
-    console.log(`我年纪变了，现在是：${age}岁了`)
-})
-app1.data.age = 100
+
+exports.Observer = Observer
