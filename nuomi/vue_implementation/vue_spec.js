@@ -1,4 +1,5 @@
 let vue = require('./vue.js')
+console.log('vue:',vue)
 let assert = require('assert')
 let chai = require('chai')
 let spies = require('chai-spies')
@@ -9,7 +10,7 @@ let should = chai.should()
 let expect = chai.expect
 
 
-describe('动态数据绑定(一)', function () {
+describe('对象响应式', function () {
     let app1 = new Observer({
         name: 'youngwind',
         age: 25
@@ -37,7 +38,22 @@ describe('动态数据绑定(一)', function () {
     })
 
 })
-describe('动态数据绑定(二)', function () {
+describe('#数组响应式', function () {
+    it('push should update list', function () {
+        let app1 = new Observer({
+            list: ['a', 'b', 'c']
+        })
+        function callback() {
+
+        }
+        let spy = chai.spy(callback)
+        app1.$watch('list', spy)
+        app1.data.list.push('d')
+        expect(spy).to.have.been.called()
+    })
+
+})
+describe('#实现$watch', function () {
 
     it('newVal should be responsive', function () {
         let app1 = new Observer({
@@ -49,7 +65,7 @@ describe('动态数据绑定(二)', function () {
             lastName: 'liang',
             firstName: 'shaofeng'
         };
-       assert.equal('set' in Object.getOwnPropertyDescriptor(app1.data,'name'),true)
+        assert.equal('set' in Object.getOwnPropertyDescriptor(app1.data, 'name'), true)
 
     })
 
@@ -66,6 +82,26 @@ describe('动态数据绑定(二)', function () {
         expect(spy).to.have.been.called()
     })
 })
-describe('动态数据绑定(三)', function () {
+describe('#深度$watch', function () {
+    it('callback should be called', function () {
+        let app2 = new Observer({
+            name: {
+                firstName: 'shaofeng',
+                lastName: 'liang'
+            },
+            age: 25
+        });
+        function callback() {
 
+        }
+        let spy = chai.spy(callback)
+        app2.$watch('name', spy)
+        app2.data.name.firstName = 'hahaha';
+        expect(spy).to.have.been.called()
+    })
+
+})
+
+describe('#静态绑定测试',function(){
+    
 })
