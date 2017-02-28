@@ -9,6 +9,41 @@
         this[name] = definition()
     }
 })('vue', function () {
+
+
+    // 常用函数
+
+    function eq(a, b) {
+        const typeA = Object.prototype.toString.call(a).slice(8, -1).toLowerCase()
+        const typeB = Object.prototype.toString.call(b).slice(8, -1).toLowerCase()
+        if (typeA !== typeB) return false
+        if (typeA === 'function') {
+            let k1 = Object.keys(a)
+            let k2 = Object.keys(b)
+            if (k1.length !== k2.length) return false
+            k1.sort()
+            k2.sort()
+            for (let i = 0; i < k1.length; i++) {
+                if (!eq(k1[i], k2[i])) {
+                    return false
+                }
+            }
+            return true
+        }
+        if (typeA === 'array') {
+            if (a.length != b.length) return false
+            a.sort()
+            b.sort()
+            for (let i = 0; i < a.length; i++) {
+                if (!eq(a[i], b[i])) {
+                    return false
+                }
+            }
+            return true
+        }
+        return a === b
+    }
+
     class Event {
         constructor() {
             this.handlers = {}
@@ -60,7 +95,7 @@
                         return val
                     },
                     set: function (newVal) {
-                        if (val === newVal) return
+                        if (eq(val, newVal)) return
                         if (typeof newVal === 'object') {
                             self._convert(newVal)
                         }
@@ -73,6 +108,7 @@
     }
     class Vue {
         constructor(config) {
+            let self = this 
             const $el = document.querySelector(config.el)
             const data = config.data || {}
             this._render($el, data)
@@ -114,9 +150,54 @@
                 self._render(child, model)
             }
         }
+    
+    }
+
+    class Batcher{
+        constructor(){
+            this.reset() 
+        }
+        reset(){
+            this.has  = {}
+            this.queue = []
+            this.wating = false 
+        }
+        push(job){
+            if(!this.has[job.id]){
+                this.queue.push(job)
+                this.has[job.id] = job 
+                if(!this.wating){
+                    this.wating = true 
+                    setTimeout(()=>{
+                        this.flush()
+                    })
+                }
+            }
+        }
+        flush(){
+            this.queue.forEach((job)=>{
+                job.cb.call(job.ctx)
+            })
+            this.reset()
+        }
+    }
+
+    class Directive{
+        constructor(name,el,vm,expression){
+            this.name = name 
+            this.vm = vm 
+            this.expression = expression
+            this.attr = 'nodeValue'
+            this.update()
+        }
+        update(){
+            this.el[this.attr] = this.vm.$data[this.expression]
+            console.log(`更新了Dom-${this.expression}`)
+        }
     }
     return {
         Observer,
-        Vue
+        Vue,
+        Batcher
     }
 })

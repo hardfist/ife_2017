@@ -1,14 +1,13 @@
 let vue = require('./vue.js')
-console.log('vue:',vue)
 let assert = require('assert')
 let chai = require('chai')
 let spies = require('chai-spies')
 let Observer = vue.Observer
+let Batcher = vue.Batcher
 
 chai.use(spies)
 let should = chai.should()
 let expect = chai.expect
-
 
 describe('对象响应式', function () {
     let app1 = new Observer({
@@ -102,6 +101,33 @@ describe('#深度$watch', function () {
 
 })
 
-describe('#静态绑定测试',function(){
-    
+describe('#静态绑定测试', function () {
+
+})
+
+describe('#批处理测试', function () {
+    it('callback should be update async', function () {
+        var batcher = new Batcher();
+        var cnt = 0;
+        var job1 = {
+            id: 1,
+            cb: () => {
+                cnt++
+            }
+        }
+        var job2 = {
+            id: 2,
+            cb: () => {
+                cnt++
+            }
+        }
+        batcher.push(job1)
+        batcher.push(job2)
+        expect(cnt).to.be.equal(0)
+        setTimeout(() => {
+            expect(cnt).to.be.equal(2)
+        })
+
+    })
+
 })

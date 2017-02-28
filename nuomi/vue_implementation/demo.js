@@ -4,23 +4,15 @@ var unwatch = WatchJS.unwatch;
 var callWatchers = WatchJS.callWatchers;
 
 //defining our object no matter which way we want
-var ex = {
-    l1a: "bla bla",
-    l1b: {
-        l2a: "lo lo",
-        l2b: "hey hey"        
-    }
+var ex1 = {
+    attr1: "initial value of attr1",
+    attr2: "initial value of attr2"
 };
 
-watch(ex, function (prop, action, difference, oldvalue){
+//defining a 'watcher' for an attribute
+watch(ex1, "attr1", function (prop, action, newvalue, oldvalue) {
+    console.log(prop + " - action: " + action + " - new: " + newvalue + ", old: " + oldvalue + "... and the context: " + JSON.stringify(this));
+});
 
-    console.log("prop: "+prop+"\n action: "+action+"\n difference: "+JSON.stringify(difference)+"\n old: "+JSON.stringify(oldvalue)+"\n ... and the context: "+JSON.stringify(this));    
-
-}, 0, true);
-
-
-ex.l1b.l2c = "new attr"; //it is not instantaneous, you may wait 50 miliseconds
-
-setTimeout(function(){
-    callWatchers(ex)
-}, 100);
+//when changing the attribute its watcher will be invoked
+ex1.attr1 = "other value"
