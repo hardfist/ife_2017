@@ -9,6 +9,7 @@ chai.use(spies)
 let should = chai.should()
 let expect = chai.expect
 
+
 describe('对象响应式', function () {
     let app1 = new Observer({
         name: 'youngwind',
@@ -68,7 +69,7 @@ describe('#实现$watch', function () {
 
     })
 
-    it('callback should be called', function () {
+    it('深度watch功能', function () {
         let app1 = new Observer({
             name: 'youngwind',
             age: 25
@@ -81,25 +82,7 @@ describe('#实现$watch', function () {
         expect(spy).to.have.been.called()
     })
 })
-describe('#深度$watch', function () {
-    it('callback should be called', function () {
-        let app2 = new Observer({
-            name: {
-                firstName: 'shaofeng',
-                lastName: 'liang'
-            },
-            age: 25
-        });
-        function callback() {
 
-        }
-        let spy = chai.spy(callback)
-        app2.$watch('name', spy)
-        app2.data.name.firstName = 'hahaha';
-        expect(spy).to.have.been.called()
-    })
-
-})
 
 describe('#静态绑定测试', function () {
 

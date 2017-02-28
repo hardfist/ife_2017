@@ -59,11 +59,11 @@
         }
     }
     class Observer {
-        constructor(data) {
+        constructor(data,parent=null) {
             this.data = data
             this.event = new Event()
+            this._parent = parent 
             this._convert(data)
-
         }
         $watch(key, cb) {
             this.event.on(key, cb);
@@ -73,7 +73,7 @@
             Object.keys(obj).forEach((key) => {
                 let val = obj[key]
                 if (typeof val === 'object') {
-                    this._convert(val)
+                    obj[key] = new Observer(val,self)
                 }
                 if (Array.isArray(val)) {
                     const aryMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse']
@@ -83,6 +83,9 @@
                         arrayAugmentations[method] = function () {
                             let val = original.apply(this, arguments)
                             self.event.emit(key, val)
+                            if(self._parent !=null){
+                                self._parent.event.emit(key,val)
+                            }
                             return val
                         }
                     })
@@ -97,10 +100,14 @@
                     set: function (newVal) {
                         if (eq(val, newVal)) return
                         if (typeof newVal === 'object') {
-                            self._convert(newVal)
+                            val = new Observer(newVal,self)
+                        }else{
+                            val = newVal
                         }
-                        self.event.emit(key, newVal)
-                        val = newVal
+                        self.event.emit(key, val)
+                        if(self._parent !=null){
+                            self._parent.event.emit(key,val)
+                        }
                     }
                 })
             })
