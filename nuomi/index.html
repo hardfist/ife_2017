@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../node_modules/watchjs/src/watch.js"></script>
+    <script src="./vue_implementation/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p>姓名: {{user.name}}</p>
+        <p>年龄: {{user.age}}</p>
+    </div>
+    <script>
+        const Vue = vue.Vue
+        var data = {
+            user: {
+                name: 'youngwind',
+                    age: 25
+            }
+        }
+        let app = new Vue({
+            el: '#app',
+            data
+        })
+    </script>
+</body>
+
+</html>
