@@ -210,9 +210,9 @@
             }
         }
         _getField(props) {
-            getValue(this.$data,props)
+            getValue(this.$data, props)
         }
-        _updateBindingAt(key,value) {
+        _updateBindingAt(key, value) {
             this._directives.forEach((directive) => {
                 if (directive.expression !== key) return
                 directive.update()
@@ -248,7 +248,8 @@
             this.reset()
         }
     }
-
+    var batcher = new Batcher()
+    var uuid = 0
     class Directive {
         constructor(name, el, vm, expression) {
             this.name = name
@@ -259,8 +260,15 @@
             this.update()
         }
         update() {
-            this.el[this.attr] = getValue(this.vm.$data,this.expression)
-            console.log(`更新了Dom-${this.expression}`)
+            let self  = this 
+            batcher.push({
+                id: uuid++,
+                cb :function() {
+                    self.el[self.attr] = getValue(self.vm.$data, self.expression)
+                    console.log(`更新了Dom-${self.expression}`)
+                }
+            })
+
         }
     }
     return {
