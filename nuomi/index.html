@@ -11,16 +11,15 @@
 
 <body>
     <div id="app">
-        <p>姓名: {{user.name}}</p>
-        <p>年龄: {{user.age}}</p>
+        <p>姓名: {{name}}</p>
+        <p>年龄: {{age}}</p>
     </div>
     <script>
         const Vue = vue.Vue
         var data = {
-            user: {
-                name: 'youngwind',
-                    age: 25
-            }
+            name: 'youngwind',
+            age: 25
+
         }
         let app = new Vue({
             el: '#app',

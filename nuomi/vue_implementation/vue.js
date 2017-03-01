@@ -43,6 +43,15 @@
         }
         return a === b
     }
+    function getValue(model, props) {
+        let list = props.split('.')
+        for (let i = 0; i < list.length; i++) {
+            if (model != null) {
+                model = model[list[i]]
+            }
+        }
+        return model
+    }
 
     // 事件对象
     class Event {
@@ -142,10 +151,11 @@
             this.$data = options.data
             this.$el = document.querySelector(options.el)
             this.$template = this.$el.cloneNode(true)
+            this._directives = []
 
             //创建观察对象
             this.observer = Observer.create(this.$data)
-            this.observer.on('set', this.$mount.bind(this))
+            this.observer.on('set', this._updateBindingAt.bind(this))
 
             //挂载
             this.$mount()
@@ -155,12 +165,7 @@
             this._compile()
         }
         _compile() {
-            fragment = document.createDocumentFragment()
-            currentNodeList.push(fragment)
-            this._compileNode(this.$template)
-
-            this.$el.parentNode.replaceChild(fragment, this.$el)
-            this.$el = document.querySelector(this.$options.el)
+            this._compileNode(this.$el)
         }
         _compileNode(node) {
             switch (node.nodeType) {
@@ -177,40 +182,41 @@
             }
         }
         _compileText(node) {
-            let self = this 
-            const reg = /{{([^}]*)}}/g
-            let content = node.textContent.replace(reg, function (word, prop) {
-                console.log('prop:',prop)
-                console.log('data:',self.$data)
-                return self._getField(prop)
+            let patt = /{{[^}]*}}/g
+            let nodeValue = node.nodeValue
+            let expressions = nodeValue.match(patt)
+            if (!expressions) {
+                return
+            }
+            expressions.forEach((expression) => {
+                let el = document.createTextNode('')
+                node.parentNode.insertBefore(el, node)
+                let property = expression.replace(/[{}]/g, '')
+                this._bindDirective('text', property, el)
             })
-            currentNodeList[currentNodeList.length - 1].appendChild(document.createTextNode(content))
+            node.parentNode.removeChild(node)
+        }
+        _bindDirective(name, expression, node) {
+            let dirs = this._directives
+            dirs.push(
+                new Directive(name, node, this, expression)
+            )
         }
         _compileElement(node) {
-            let newNode = document.createElement(node.tagName)
-            if (node.hasAttributes()) {
-                let attrs = node.attributes
-                for (let attr of attrs) {
-                    newNode.setAttribute(attr.name, attr.value)
-                }
-            }
-            let currentNode = currentNodeList[currentNodeList.length - 1].appendChild(newNode)
             if (node.hasChildNodes()) {
-                currentNodeList.push(currentNode)
                 for (let childNode of node.childNodes) {
                     this._compileNode(childNode)
                 }
             }
         }
-        _getField(props){
-            let list = props.split('.')
-            let model = this.$data || {}
-            for(let i=0;i<list.length;i++){
-                if(model != null){
-                    model = model[list[i]]
-                }
-            }
-            return model 
+        _getField(props) {
+            getValue(this.$data,props)
+        }
+        _updateBindingAt(key,value) {
+            this._directives.forEach((directive) => {
+                if (directive.expression !== key) return
+                directive.update()
+            })
         }
     }
 
@@ -246,13 +252,14 @@
     class Directive {
         constructor(name, el, vm, expression) {
             this.name = name
+            this.el = el
             this.vm = vm
             this.expression = expression
             this.attr = 'nodeValue'
             this.update()
         }
         update() {
-            this.el[this.attr] = this.vm.$data[this.expression]
+            this.el[this.attr] = getValue(this.vm.$data,this.expression)
             console.log(`更新了Dom-${this.expression}`)
         }
     }
