@@ -1,0 +1,43 @@
+.checkbox input{
+    display: none;
+    margin: 0;
+}
+.checkbox label{
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ff0000;
+    display: flex;
+    display: -webkit-flex;
+}
+.checkbox input:checked+label::after{
+    margin: auto;
+    content: 'x';
+    color:red;
+    height: 8px;
+    width: 8px;
+    line-height: 8px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.radio input{
+    margin: 0;
+    display: none;
+}
+.radio label{
+    width: 16px;
+    height: 16px; 
+    border-radius: 50%;
+    border: 1px solid #ff0000;
+    display: flex;
+    display: -webkit-flex
+}
+.radio input:checked+label::after{
+    content:'';
+    margin: auto;
+    height: 8px;
+    width: 8px;
+    display: block;
+    background: red;
+    border-radius: 50%;
+}

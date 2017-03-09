@@ -152,13 +152,27 @@
             this.$el = document.querySelector(options.el)
             this.$template = this.$el.cloneNode(true)
             this._directives = []
-
+            this._initComputed()
             //创建观察对象
             this.observer = Observer.create(this.$data)
             this.observer.on('set', this._updateBindingAt.bind(this))
 
             //挂载
             this.$mount()
+        }
+        _initComputed(){
+            let computed = this.$options.computed 
+            if(!computed) return 
+            for(let key in computed){
+                let def = computed[key]
+                if(typeof def === 'function'){
+                    Object.defineProperty(this.$data,key,{
+                        get : def,
+                        enumerable: true,
+                        configurable: true
+                    })
+                }
+            }
         }
         $mount() {
             console.log('rerender')

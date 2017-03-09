@@ -1,128 +1,126 @@
-class Vue{
-    _initData(){
-        var dataFn = this.$options.data 
-        var data = this._data = dataFn ? dataFn() : {}
-        if(!isPlainObject(data)){
-            data = {}
-            
-        }
-        var props = this._props 
-        var keys = Object.keys(data)
 
-        var i,key 
-        i = keys.length 
-        while(i--){
-            key = keys[i]
-            if(!props || !hasOwn(props,key)){
-                this._proxy(key)
-            }else if(process.env.NODE_ENV !== 'production'){
+var uid$1 = 0 
+class Watcher{
+    constructor(exp,vm,cb){
+        this.exp = exp 
+        this.cb = cb 
+        this.vm = vm 
 
-            }
-        }
-        observe(data,this)
+        this.value = null 
+        this.getter = parseExpression(exp).get 
+        this.uid = uid$1++ 
+        this.update()
     }
-    _proxy(key){
-        if(!isReversed(key)){
-            var self = this 
-            Object.defineProperty(self,key,{
-                configurable : true,
-                enumerable : true,
-                get : function proxyGetter(){
-                    return self._data[key]
-                },
-                set: function proxySetter(val){
-                    self._data[key] = val 
-                }
-            })
+    get(){
+        Dep.target = this 
+        
+        var value = this.getter ? this.getter(this.vm) : ''
+        
+        Dep.target = null 
+        return value 
+    }
+    update(){
+        var newVal = this.get()
+        if(this.value != newVal){
+            this.cb && this.cb(newVal,this.value)
+            this.value = newVal 
         }
     }
 }
 
 
-function observe(){
-    var ob = new Observer(value)
-    ob.addVm(vm)
-    return ob
-}
-class Observer{
-    constructor(value){
-        this.value = value 
-        this.dep = new Dep()
 
-        if(isArray(value)){
-            var augment = hasProto ? protoAugment : copyAugment 
-            augment(value,arrayMethods,arrayKeys)
-        }else{
-            this.walk(value)
-        }
-    }
-    walk(obj){
-        var keys = Object.keys(obj)
-        for(var i=0;i<keys.length;i++){
-            this.convert(keys[i],obj[keys[i]])
-        }
-    }
-    convert(key,val){
-        defineReactive(this.value,key,value)
-    }
+
+function isObject(obj){
+    return obj != null && typeof(obj) === 'object'
 }
-function defineReactive(obj,key,val){
-    var dep = new Dep()
-    var property = Object.getOwnPropertyDescriptor(obj,key)
-    if(property && property.configurable === false){
+function isPlainObject(obj){
+    return Object.prototype.toString.call(obj) === '[object Object]'
+}
+
+function observe(data){
+    if(!isObject(data) || !isPlainObject(data)){
         return 
     }
-
-    var getter = property && property.get 
-    var setter = property && property.set 
-
-    Object.defineProperty(obj,key,{
-        enumerable : true,
-        configurable : true,
-        get : function reactiveGetter(){
-            var value = getter ? getter.call(obj) : val 
-            if(Dep.target){
-                dep.depend()
-                if(childOb){
-                    childOb.dep.depend()
-                }
-                if(isArray(value)){
-                    for(var e,i=0,l=value.length;i<l;i++){
-                        e = value[i]
-                        e && e.__ob__ && e.__ob__.dep.depend()
-                    }
-                }
-            }
-            return value
-        },
-        set: function reactiveSetter(newVal){
-            var value = getter ? getter.call(obj): val 
-            if(newVal === value){
-                return 
-            }
-            if(setter){
-                setter.call(obj,newVal)
-            }else{
-                val = newVal 
-            }
-            childOb = observe(newVal)
-            dep.notify()
-        }
-    })
+    return new Observer(data)
 }
-
-class Dep{
+class Observer{
+    constructor(data){
+        this.data = data 
+        this.transform(data)
+    }
+    transform(data){
+        for(var key in data){
+            this.defineReactive(data,key,data[key])
+        }
+    }
+    defineReactive(data,key,val){
+        var  dep = new Dep()
+        Object.defineProperty(data,key,{
+            enumerable : true,
+            configurable : false,
+            get : function(){
+                console.log(`get ${key}:${val}`)
+                if(Dep.target){
+                    //收集订阅者
+                    dep.addSub(Dep.target)
+                }
+                return val
+            },
+            set:function(newVal){
+                console.log(`set ${key}:${newVal}`)
+                if(newVal === val){
+                    return 
+                }
+                val = newVal 
+                observe(newVal)
+                //发送事件给订阅者
+                dep.notify(newVal)
+            }
+        })
+        observe(value)
+    }
+}
+class Dep {
     constructor(){
-        this.id = uid++ 
-        this.subs = []
+        this.subs = {}
     }
-    depend(){
-        Dep.target.addDep(this)
+    addSub(target){
+        if(!this.subs[target.uid]){
+            this.subs[target.uid]= target
+        }
     }
-    notify(){
-        var subs =toArray(this.subs)
-        for(var i=0;i<subs.length;i++){
-            subs[i].update()
+    notify(newVal){
+        for(var uid in this.subs){
+            this.subs[uid].update(newVal)
+        }
+    }
+}
+Dep.target = null 
+
+
+
+class Vue {
+    constructor(options){
+        this.$data = options.data 
+        this.$el = options.el 
+        this._proxy(options.data)
+        this._proxy(options.method)
+        var ob = observe(this.$data)
+        if(!ob) return 
+        compile(options.el,this)
+    }
+    _proxy(data){
+        var self = this 
+        for(let key in data){
+            Object.defineProperty(self,key,{
+                get: function(){
+                    return data[key]
+                },
+                set: function(newVal){
+                    data[key] = newVal
+                }
+            })
         }
     }
 }
